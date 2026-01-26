@@ -1,0 +1,22 @@
+{
+  "name": "mdb-encryption",
+  "version": "1.0.0",
+  "main": "src/demo.fle-v1.csfle.js",
+  "scripts": {
+    "fle:v1": "node src/demo.fle-v1.csfle.js",
+    "fle:v2": "node src/demo.fle-v2.qe.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:mongocryptd": "docker-compose up -d",
+    "stop:mongocryptd": "docker-compose down",
+    "status:mongocryptd": "docker-compose ps"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "mongodb": "^7.0.0",
+    "mongodb-client-encryption": "^7.0.0"
+  }
+}
