@@ -1,111 +1,129 @@
-// qe_demo.js
-const { MongoClient } = require("mongodb");
-const { ClientEncryption } = require("mongodb-client-encryption");
-const { readFileSync } = require("fs");
+import dotenv from 'dotenv';
 
-const uri = "mongodb://localhost:27017";
-const keyVaultNamespace = "encryption.__keyVault";
+dotenv.config({ override: true });
 
-async function main() {
-    const localMasterKey = readFileSync("../cfg/master-key.bin");
+import { MongoClient, ClientEncryption } from "mongodb";
+import { getMasterKey } from "./lib/key.vault.js";
+import { readFile } from 'fs/promises';
 
-    const kmsProviders = {
-        local: {
-            key: localMasterKey
-        }
-    };
+// const qeUsers = JSON.parse(await readFile(new URL('./schema/qe.users.json', import.meta.url), 'utf8'));
 
-    const regularClient = new MongoClient(uri);
-    await regularClient.connect();
+const {
+    KEYVAULT_DATABASE = 'encryption',
+    KEYVAULT_COLLECTION = '__keyVault',
+    KEYVAULT_PROVIDER_NAME = 'local',
+    KEYVAULT_ALT_NAME = "myKey",
+    MONGODB_URI = "mongodb://localhost:27017",
+    MONGODB_CRYPT_SHARED_LIB_PATH = 'C:\\data\\bin\\mongo\\crypt_shared_v1-8.2.4\\bin\\mongo_crypt_v1.dll',
+    MONGODB_COLLECTION = "patients",
+    MONGODB_DATABASE = "medicalRecords"
+} = process.env;
 
-    const keyVault = regularClient
-        .db(keyVaultNamespace.split(".")[0])
-        .collection(keyVaultNamespace.split(".")[1]);
+const collNamespace = `${MONGODB_DATABASE}.${MONGODB_COLLECTION}`;
 
-    await keyVault.createIndex(
-        { keyAltNames: 1 },
-        { unique: true, partialFilterExpression: { keyAltNames: { $exists: true } } }
-    );
+(async function () {
+    try {
+        // 1. Get master key from Vault
+        const masterKey = await getMasterKey();
+        const kmsProviders = {
+            local: {
+                key: masterKey,
+            }
+        };
 
-    const encryption = new ClientEncryption(regularClient, {
-        keyVaultNamespace,
-        kmsProviders
-    });
-
-    // Create one or more data keys (QE can use separate keys per field if desired)
-    const ssnKeyId = await encryption.createDataKey("local", { keyAltNames: ["qe-ssn-key"] });
-    const ageKeyId = await encryption.createDataKey("local", { keyAltNames: ["qe-age-key"] });
-
-    console.log("Created QE data keys:", ssnKeyId, ageKeyId);
-
-    // Encrypted fields description (QE)
-    // NOTE: structure and field names are conceptual; check docs for latest spec
-    const encryptedFieldsMap = {
-        "demo.customers_qe": {
-            fields: [
-                {
-                    path: "ssn",
-                    bsonType: "string",
-                    keyId: ssnKeyId,
-                    queries: {
-                        queryType: "equality"
-                    }
-                },
-                {
-                    path: "age",
-                    bsonType: "int",
-                    keyId: ageKeyId,
-                    queries: {
-                        queryType: "range",
-                        // In real QE, you can specify parameters such as:
-                        // contention, sparsity, min, max, precision, etc.
-                    }
-                }
-            ]
-        }
-    };
-
-    // QE-aware client: uses encryptedFieldsMap instead of schemaMap
-    const qeClient = new MongoClient(uri, {
-        autoEncryption: {
-            keyVaultNamespace,
+        const autoEncryption = {
+            keyVaultNamespace: `${KEYVAULT_DATABASE}.${KEYVAULT_COLLECTION}`,
             kmsProviders,
-            encryptedFieldsMap
-            // plus any extra QE/queryable encryption options required by your version
-        }
-    });
+            extraOptions: {
+                cryptSharedLibPath: MONGODB_CRYPT_SHARED_LIB_PATH,
+            }
+        };
 
-    await qeClient.connect();
+        const encryptedClient = new MongoClient(MONGODB_URI);
 
-    const db = qeClient.db("demo");
-    const collName = "customers_qe";
+        const clientEncryption = new ClientEncryption(encryptedClient, autoEncryption);
 
-    // In many setups you explicitly create a QE-encrypted collection using the metadata;
-    // Some drivers can create it automatically; here we assume it's created on first use
-    const coll = db.collection(collName);
+        const customerMasterKeyCredentials = {}; // Local KMS does not require additional credentials
 
-    // Insert documents – ssn and age are encrypted using QE
-    await coll.insertMany([
-        { name: "Bob", ssn: "555-55-5555", age: 30 },
-        { name: "Carol", ssn: "999-99-9999", age: 45 },
-        { name: "Dave", ssn: "111-11-1111", age: 52 }
-    ]);
+        // 2. Define encryptedFieldsMap for Queryable Encryption
+        const encryptedFieldsMap = {
+            encryptedFields: {
+                fields: [
+                    {
+                        path: "patientRecord.ssn",
+                        bsonType: "string",
+                        queries: { queryType: "equality" },
+                    },
+                    {
+                        path: "patientRecord.billing",
+                        bsonType: "object",
+                    }
+                ]
+            }
+        };
 
-    console.log("Inserted QE-encrypted customers");
+        await clientEncryption.createEncryptedCollection(
+            MONGODB_DATABASE,
+            MONGODB_COLLECTION,
+            {
+                provider: KEYVAULT_PROVIDER_NAME,
+                createCollectionOptions: {
+                    encryptedFields: encryptedFieldsMap.encryptedFields
+                },
+                masterKey: customerMasterKeyCredentials,
+            }
+        );
 
-    // Equality query on encrypted ssn
-    const bob = await coll.findOne({ ssn: "555-55-5555" });
-    console.log("Found Bob:", bob);
+        const encryptedCollection = encryptedClient
+            .db(MONGODB_DATABASE)
+            .collection(MONGODB_COLLECTION);
 
-    // Range query on encrypted age: 40 <= age <= 60
-    const older = await coll
-        .find({ age: { $gte: 40, $lte: 60 } })
-        .toArray();
+        const result = await encryptedCollection.insertOne({
+            patientName: "Jon Doe",
+            patientId: 12345678,
+            patientRecord: {
+                ssn: "987-65-4320",
+                billing: {
+                    type: "Visa",
+                    number: "4111111111111111",
+                },
+                billAmount: 1500,
+            },
+        });
+        console.log("Inserted document:", result.insertedId);
 
-    console.log("Found customers with age between 40 and 60:", older);
+        const findResult = await encryptedCollection.findOne({
+            "patientRecord.ssn": "987-65-4320",
+        });
+        console.log(findResult);
 
-    await qeClient.close();
-    await regularClient.close();
+    } catch (err) {
+        console.error("Error in FLE QE demo:", err);
+
+    } finally {
+
+    }
+})();
+
+
+/**
+ * Retrieve key from Key Vault collection
+ * @param {*} keyAltName 
+ * @param {*} ns 
+ * @returns 
+ */
+async function getKey(keyAltName = "myKey", ns = KEYVAULT_NS) {
+    const keyVaultColl = mdb.db.collection(ns.split(".")[1]);
+    let key = await keyVaultColl.findOne({ keyAltNames: keyAltName });
+    if (!key) {
+        key = await keyVaultColl.insertOne({
+            keyAltNames: [keyAltName],
+            provider: "local",
+            masterKey: {},
+            creationDate: new Date(),
+        });
+        console.log("Created new key in Key Vault:", key.insertedId);
+    }
+    console.log("Using key from Key Vault:", key.insertedId);
+    return key;
 }
-
-main().catch(console.error);

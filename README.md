@@ -22,5 +22,8 @@ Openssl
     ```
 
 [Client Encryption](https://www.mongodb.com/docs/manual/reference/method/ClientEncryption.encrypt/)
-
 [Mongo Docker](https://hub.docker.com/_/mongo)
+[Download enterprise](https://www.mongodb.com/try/download/enterprise)
+[Docker and MongoDB](https://www.mongodb.com/resources/products/compatibilities/docker)
+[Queryable Encryption quick-start](https://www.mongodb.com/docs/manual/core/queryable-encryption/quick-start/)
+[Queryable Encryption Dependencies](https://www.mongodb.com/docs/manual/core/queryable-encryption/install/?language-no-dependencies=nodejs&operating-system=windows)

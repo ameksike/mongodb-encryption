@@ -2,7 +2,9 @@
   "name": "mdb-encryption",
   "version": "1.0.0",
   "main": "src/demo.fle-v1.csfle.js",
+  "type": "module",
   "scripts": {
+    "fle": "node src/demo.fle-v2.qe.js",
     "fle:v1": "node src/demo.fle-v1.csfle.js",
     "fle:v2": "node src/demo.fle-v2.qe.js",
     "test": "echo \"Error: no test specified\" && exit 1",
