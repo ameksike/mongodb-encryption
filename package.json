@@ -1,0 +1,21 @@
+{
+  "name": "mdb-encryption",
+  "version": "1.0.0",
+  "main": "src/demo.fle-v1.csfle.js",
+  "type": "module",
+  "scripts": {
+    "demo:cs:auto": "node src/demo.fle-v1.csfle.auto.js",
+    "demo:cs:manual": "node src/demo.fle-v1.csfle.manual.js",
+    "demo:qe": "node src/demo.fle-v2.qe.js",
+    "test": "node --test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "mongodb": "^7.0.0",
+    "mongodb-client-encryption": "^7.0.0"
+  }
+}

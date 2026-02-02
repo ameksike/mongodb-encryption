@@ -1,0 +1,19 @@
+{
+  "fields": [
+    {
+      "path": "email",
+      "bsonType": "string",
+      "queries": { "queryType": "equality" }
+    },
+    {
+      "path": "ssn",
+      "bsonType": "string",
+      "queries": { "queryType": "equality" }
+    },
+    {
+      "path": "age",
+      "bsonType": "int",
+      "queries": { "queryType": "range" }
+    }
+  ]
+}

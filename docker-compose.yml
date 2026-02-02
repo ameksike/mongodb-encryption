@@ -1,0 +1,26 @@
+services:
+  mongo:
+    image: mongo:8.2.3
+    container_name: mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    # Expose MongoDB on localhost:27017
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  mongocryptd:
+    build:
+      context: ./iac/mongocryptd
+      dockerfile: Dockerfile
+    container_name: mongocryptd
+    restart: unless-stopped
+    # Expose mongocryptd on localhost:27020
+    ports:
+      - "127.0.0.1:27020:27020"
+
+volumes:
+  mongo_data:
