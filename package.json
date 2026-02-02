@@ -4,13 +4,10 @@
   "main": "src/demo.fle-v1.csfle.js",
   "type": "module",
   "scripts": {
-    "fle": "node src/demo.fle-v2.qe.js",
-    "fle:v1": "node src/demo.fle-v1.csfle.js",
-    "fle:v2": "node src/demo.fle-v2.qe.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start:mongocryptd": "docker-compose up -d",
-    "stop:mongocryptd": "docker-compose down",
-    "status:mongocryptd": "docker-compose ps"
+    "demo:cs:auto": "node src/demo.fle-v1.csfle.auto.js",
+    "demo:cs:manual": "node src/demo.fle-v1.csfle.manual.js",
+    "demo:qe": "node src/demo.fle-v2.qe.js",
+    "test": "node --test"
   },
   "keywords": [],
   "author": "",
