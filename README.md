@@ -56,9 +56,11 @@ npm test               # Integration tests (requires services above)
     ```
 
 ## References
-- [Client Encryption](https://www.mongodb.com/docs/manual/reference/method/ClientEncryption.encrypt/)
-- [Mongo Docker](https://hub.docker.com/_/mongo)
-- [Download enterprise](https://www.mongodb.com/try/download/enterprise)
+- [MongoDB Enterprise Server Download](https://www.mongodb.com/try/download/enterprise)
+- [MongoDB Docker Image Download](https://hub.docker.com/_/mongo)
 - [Docker and MongoDB](https://www.mongodb.com/resources/products/compatibilities/docker)
+- [Client Encryption](https://www.mongodb.com/docs/manual/reference/method/ClientEncryption.encrypt/)
 - [Queryable Encryption quick-start](https://www.mongodb.com/docs/manual/core/queryable-encryption/quick-start/)
 - [Queryable Encryption Dependencies](https://www.mongodb.com/docs/manual/core/queryable-encryption/install/?language-no-dependencies=nodejs&operating-system=windows)
+- [Manage MongoDB Atlas Database Secrets in HashiCorp Vault](https://www.mongodb.com/company/blog/technical/manage-atlas-database-secrets-hashicorp-vault)
+- [Cost Optimization with Optimal Document Size](https://www.mongodb.com/company/blog/technical/cost-optimization-with-optimal-document-size?utm_source=TWITTER&utm_medium=ORGANIC_SOCIAL_ADVOCACY)

@@ -163,4 +163,59 @@ export class CsFleAuto {
             collection: parts[1]
         };
     }
+
+    /**
+     * Manually Encrypt a value explicitly
+     * @param {*} value - The value to encrypt
+     * @param {Object} options
+     * @param {Binary[]} [options.keyId] - Data key ID(s) to use for encryption
+     * @param {string} [options.algorithm="AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"] - Encryption algorithm
+     * @param {string} [options.bsonType="string"] - BSON type of the value
+     * @param {string} [options.keyAltName] - Alternate name of the data key
+     * @param {string} [options.kmsProviderName="local"] - KMS provider name
+     * @returns {Promise<Binary>} The encrypted value as a Binary
+     */
+    async encrypt(value, options) {
+        if (!value) {
+            throw new Error("Value to encrypt must be provided");
+        }
+        let {
+            keyId,
+            algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
+            bsonType = "string",
+            keyAltName,
+            kmsProviderName = "local"
+        } = options || {};
+        try {
+            keyId = keyId || (keyAltName ? await this.getKeyVaultKeyID(keyAltName, kmsProviderName) : null);
+            const clientEncryption = this.getKeyVaultClientEncryption();
+            return await clientEncryption.encrypt(value, {
+                keyId,
+                algorithm,
+                bsonType
+            });
+        }
+        catch (e) {
+            console.error("Encryption error:", e);
+            throw e;
+        }
+    }
+
+    /**
+     * Manually Decrypt a value explicitly
+     * @param {Binary} value - The encrypted value as a Binary
+     * @returns {Promise<*>} The decrypted value
+     */
+    async decrypt(value) {
+        if (!value) {
+            throw new Error("Value to decrypt must be provided");
+        }
+        try {
+            const clientEncryption = this.getKeyVaultClientEncryption();
+            return await clientEncryption.decrypt(value);
+        } catch (e) {
+            console.error("Decryption error:", e);
+            throw e;
+        }
+    }
 }
