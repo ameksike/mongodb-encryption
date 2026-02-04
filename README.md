@@ -7,10 +7,12 @@ Two minimal demos that write and read encrypted data with MongoDB 8.2:
 
 ## Prerequisites
 
-- MongoDB 8.2 server (Enterprise or Atlas) running and reachable.
-- `mongocryptd` available on PATH (for CSFLE).
-- `mongo_crypt_v1` shared library built/installed; set `MONGODB_CRYPT_SHARED_LIB_PATH` to its absolute path (for QE).
 - Node.js 18+.
+- MongoDB 8.2 server (Enterprise or Atlas) running and reachable.
+- MongoDB Crypto service
+    - `mongocryptd` available on PATH (for CSFLE).
+    - `mongo_crypt_v1` shared library built/installed; set `MONGODB_CRYPT_SHARED_LIB_PATH` to its absolute path (for QE).
+    - [![](./docs/mdb.prd.ea.download.jpg)](https://www.mongodb.com/try/download/enterprise)
 
 ## Configuration
 
