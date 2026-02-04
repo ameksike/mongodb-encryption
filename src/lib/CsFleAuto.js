@@ -176,6 +176,9 @@ export class CsFleAuto {
      * @returns {Promise<Binary>} The encrypted value as a Binary
      */
     async encrypt(value, options) {
+        if (!value) {
+            throw new Error("Value to encrypt must be provided");
+        }
         let {
             keyId,
             algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic",
@@ -183,12 +186,19 @@ export class CsFleAuto {
             keyAltName,
             kmsProviderName = "local"
         } = options || {};
-        keyId = keyId || (keyAltName ? await this.getKeyVaultKeyID(keyAltName, kmsProviderName) : null);
-        return await this.getKeyVaultClientEncryption().encrypt(value, {
-            keyId,
-            algorithm,
-            bsonType
-        });
+        try {
+            keyId = keyId || (keyAltName ? await this.getKeyVaultKeyID(keyAltName, kmsProviderName) : null);
+            const clientEncryption = this.getKeyVaultClientEncryption();
+            return await clientEncryption.encrypt(value, {
+                keyId,
+                algorithm,
+                bsonType
+            });
+        }
+        catch (e) {
+            console.error("Encryption error:", e);
+            throw e;
+        }
     }
 
     /**
@@ -197,6 +207,15 @@ export class CsFleAuto {
      * @returns {Promise<*>} The decrypted value
      */
     async decrypt(value) {
-        return await this.getKeyVaultClientEncryption().decrypt(value);
+        if (!value) {
+            throw new Error("Value to decrypt must be provided");
+        }
+        try {
+            const clientEncryption = this.getKeyVaultClientEncryption();
+            return await clientEncryption.decrypt(value);
+        } catch (e) {
+            console.error("Decryption error:", e);
+            throw e;
+        }
     }
 }
