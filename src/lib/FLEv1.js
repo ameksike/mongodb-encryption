@@ -4,7 +4,7 @@ import { MongoClient, ClientEncryption, Binary } from "mongodb";
  * Class for Client-Side Field Level Encryption with Auto Encryption
  * cryptSharedLibPath or mongocryptd must be provided in extraOptions for autoEncryption to work
  */
-export class CsFleAuto {
+export class FLEv1 {
 
     /**
      * Constructor for CsFle
@@ -25,7 +25,7 @@ export class CsFleAuto {
             keyVaultDatabase,
             keyVaultCollection,
             kmsProviders,
-            cryptSharedLibPath
+            cryptSharedLibPath,
         } = options;
 
         this.uri = uri;
@@ -104,7 +104,7 @@ export class CsFleAuto {
     /**
      * Get or create an encrypted MongoClient
      * @param {Object} options
-     * @param {Object} [options.encryptedFieldsMap] - Encrypted fields map
+     * @param {Object} [options.schemaMap] - Encrypted fields map
      * @param {Object} [options.extraOptions] - Extra options for autoEncryption
      * @returns {Promise<MongoClient>} The encrypted MongoClient
      */
