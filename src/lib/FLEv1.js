@@ -4,7 +4,7 @@ import { MongoClient, ClientEncryption, Binary } from "mongodb";
  * Class for Client-Side Field Level Encryption with Auto Encryption
  * cryptSharedLibPath or mongocryptd must be provided in extraOptions for autoEncryption to work
  */
-export class CsFleAuto {
+export class FLEv1 {
 
     /**
      * Constructor for CsFle

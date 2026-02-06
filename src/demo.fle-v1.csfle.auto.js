@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
 import { getMasterKey } from "./lib/key.vault.js";
-import { CsFleAuto } from "./lib/CsFleAuto.js";
+import { FLEv1 } from "./lib/FLEv1.js";
 
 dotenv.config({ override: true });
 
@@ -19,7 +19,7 @@ dotenv.config({ override: true });
         } = process.env;
 
         // Initialize CSFLE Auto handler
-        const csFleAuto = new CsFleAuto({
+        const fleV1 = new FLEv1({
             uri: MONGODB_URI,
             kmsProviders: {
                 local: {
@@ -32,7 +32,7 @@ dotenv.config({ override: true });
         });
 
         // Get data key ID from key vault (or create if it doesn't exist)
-        const dataKeyId = await csFleAuto.getKeyVaultKeyID(DATA_KEY_ALT_NAME, "local");
+        const dataKeyId = await fleV1.getKeyVaultKeyID(DATA_KEY_ALT_NAME, "local");
 
         // Define schema map for CSFLE
         const schemaMap = {
@@ -58,7 +58,7 @@ dotenv.config({ override: true });
         };
 
         // Get encrypted MongoClient
-        const encryptedClient = await csFleAuto.getEncryptedClient({
+        const encryptedClient = await fleV1.getEncryptedClient({
             schemaMap
         });
 
@@ -85,7 +85,7 @@ dotenv.config({ override: true });
             .findOne({ _id: insertResult.insertedId });
 
         // Check if the ssn field is encrypted in the raw document
-        const ssnIsEncrypted = csFleAuto.isEncryptedValue(raw?.ssn);
+        const ssnIsEncrypted = fleV1.isEncryptedValue(raw?.ssn);
 
         // Output results
         console.log("Decrypted customer ssn:", decrypted);
