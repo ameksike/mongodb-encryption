@@ -25,7 +25,7 @@ export class FLEv1 {
             keyVaultDatabase,
             keyVaultCollection,
             kmsProviders,
-            cryptSharedLibPath
+            cryptSharedLibPath,
         } = options;
 
         this.uri = uri;
