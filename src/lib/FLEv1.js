@@ -104,7 +104,7 @@ export class FLEv1 {
     /**
      * Get or create an encrypted MongoClient
      * @param {Object} options
-     * @param {Object} [options.encryptedFieldsMap] - Encrypted fields map
+     * @param {Object} [options.schemaMap] - Encrypted fields map
      * @param {Object} [options.extraOptions] - Extra options for autoEncryption
      * @returns {Promise<MongoClient>} The encrypted MongoClient
      */

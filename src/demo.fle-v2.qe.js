@@ -35,7 +35,6 @@ try {
     const encryptionOpts = {
         keyVaultNamespace,
         kmsProviders,
-        // encryptedFieldsMap,  // <- CLAVE: encryptedFieldsMap => QE
         extraOptions: {
             cryptSharedLibPath: MONGODB_CRYPT_SHARED_LIB_PATH,
         },
