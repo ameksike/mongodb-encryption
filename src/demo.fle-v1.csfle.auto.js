@@ -3,6 +3,8 @@ import { MongoClient } from "mongodb";
 import { getMasterKey } from "./lib/key.vault.js";
 import { FLEv1 } from "./lib/FLEv1.js";
 
+// This demo shows how to use the FLEv1 class to perform manual encryption and decryption using ClientEncryption, without relying on auto-encryption features.
+// It demonstrates how to encrypt specific fields before inserting documents and how to decrypt them after retrieval.
 dotenv.config({ override: true });
 
 (async () => {

@@ -6,6 +6,7 @@ import { getMasterKey } from "./lib/key.vault.js";
 
 try {
 
+    // Load environment variables
     const {
         MONGODB_URI = "mongodb://localhost:27017",
         MONGODB_DATABASE = "demo",
@@ -15,6 +16,7 @@ try {
         MONGODB_CRYPT_SHARED_LIB_PATH,
     } = process.env;
 
+    // Initialize FLEv2 handler
     const fleV2 = new FLEv2({
         uri: MONGODB_URI,
         kmsProviders: {
@@ -28,7 +30,7 @@ try {
         cryptSharedLibPath: MONGODB_CRYPT_SHARED_LIB_PATH,
     });
 
-    // Esquema de QE: encryptedFieldsMap + queries
+    // Define QE schema map for the encrypted collection
     const encryptedFieldsMap = {
         encryptedFields: {
             fields: [
@@ -41,13 +43,21 @@ try {
         },
     };
 
+    // Get or create the encrypted MongoClient with QE schema map
     await fleV2.getEncryptedClient({ schemaMap: encryptedFieldsMap });
 
+    // Get the encrypted collection
     const coll = fleV2.getCollection();
 
+    // Insert and query documents
     await coll.insertOne({ name: 'Julia', ssn: '123-45-5555' });
+
+    // Query the document using the encrypted field
     const found = await coll.findOne({ 'ssn': '123-45-5555' });
+
+    // Log the found document
     console.log(found);
+
 } catch (error) {
     console.error("Error:", error);
 }
