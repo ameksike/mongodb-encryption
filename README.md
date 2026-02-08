@@ -28,9 +28,10 @@ Create a `.env` (or set env vars) for the values you need. Useful vars:
 
 ```bash
 npm install
-npm run demo:cs:manual
+npm run demo:cs:manual # CSFLE
 npm run demo:cs:auto   # CSFLE / mongocryptd
-npm run demo:qe        # Queryable Encryption / crypt_shared
+npm run demo:qe:simple # Queryable Encryption / crypt_shared
+npm run demo:qe:class  #
 npm test               # Integration tests (requires services above)
 ```
 
