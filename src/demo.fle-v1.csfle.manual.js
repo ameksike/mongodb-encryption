@@ -4,6 +4,8 @@ import { getMasterKey } from "./lib/key.vault.js";
 // import { getMasterKey } from "./lib/key.local.js";
 import { FLEv1 } from "./lib/FLEv1.js";
 
+// This demo shows how to use the FLEv1 class to perform manual encryption and decryption using ClientEncryption, without relying on auto-encryption features.
+// It demonstrates how to encrypt specific fields before inserting documents and how to decrypt them after retrieval.
 dotenv.config({ override: true });
 
 (async () => {
@@ -18,7 +20,7 @@ dotenv.config({ override: true });
             MONGODB_COLLECTION = "customers_csfle",
         } = process.env;
 
-        // Initialize CSFLE Auto handler
+        // Initialize CSFLE manual encryption handler
         const fleV1 = new FLEv1({
             uri: MONGODB_URI,
             kmsProviders: {
@@ -32,6 +34,9 @@ dotenv.config({ override: true });
 
         // Use the common client to perform operations
         const client = new MongoClient(MONGODB_URI);
+        await client.connect();
+
+        // Get data key ID from key vault (or create if it doesn't exist)
         const coll = client.db(MONGODB_DATABASE).collection(MONGODB_COLLECTION);
 
         // Insert a sample document
@@ -41,6 +46,7 @@ dotenv.config({ override: true });
             email: "lucia@example.com"
         };
 
+        // Encrypt the fields manually using ClientEncryption
         const encryptedDoc = {
             name: plaintext.name,
             ssn: await fleV1.encrypt(plaintext.ssn, { keyAltName: DATA_KEY_ALT_NAME }),

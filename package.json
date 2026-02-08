@@ -1,13 +1,13 @@
 {
   "name": "mdb-encryption",
   "version": "1.0.0",
-  "main": "src/demo.fle-v1.csfle.js",
+  "main": "src/demo.fle-v1.csfle.auto.js",
   "type": "module",
   "scripts": {
     "demo:cs:auto": "node src/demo.fle-v1.csfle.auto.js",
     "demo:cs:manual": "node src/demo.fle-v1.csfle.manual.js",
-    "demo:qe": "node src/demo.fle-v2.qe.js",
-    "demo:qe-2": "node src/demo.fle-v2.qe.class.js",
+    "demo:qe:simple": "node src/demo.fle-v2.qe.simple.js",
+    "demo:qe:class": "node src/demo.fle-v2.qe.class.js",
     "test": "node --test"
   },
   "keywords": [],
