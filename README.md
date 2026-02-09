@@ -12,7 +12,7 @@ Minimal, copy/pasteable Node.js examples that write and read encrypted data with
 - `src/lib/FLEv1.js`: CSFLE v1 helper; builds key vault + data keys, returns auto-encryption clients, and offers explicit encrypt/decrypt utilities.
 - `src/lib/FLEv2.js`: QE helper; configures autoEncryption with `crypt_shared`, ensures encrypted collections exist via `ClientEncryption`, and returns ready-to-use clients/collections.
 - `src/lib/key.vault.js`: HashiCorp Vault-backed 96-byte master key fetch/create (base64). Swap in your Vault settings for real environments.
-- `src/lib/key.local.js`: File-based 96-byte master key generator/reader for local demos only—replace with a real KMS in production.
+- `src/lib/key.local.js`: File-based 96-byte master key generator/reader for local demos only, replace with a real KMS in production.
 
 ## Prerequisites
 - Node.js LTS (18+). Install from https://nodejs.org/en/download.
@@ -87,7 +87,7 @@ Each npm script uses the `.env` values above. QE runs need `MONGODB_CRYPT_SHARED
 ## What each demo does (developer + security view)
 - CSFLE manual (`demo.fle-v1.csfle.manual.js`): explicitly encrypts `ssn` (deterministic) and `email` (randomized) before `insertOne`, then decrypts on read. Good for understanding per-field control and the cost of handling ciphertext yourself.
 - CSFLE auto (`demo.fle-v1.csfle.auto.js`): uses a schema map so reads/writes happen on plaintext while the driver encrypts/decrypts transparently. Shows how `mongocryptd`/`crypt_shared` participates; safer for apps that want minimal code changes.
-- QE simple (`demo.fle-v2.qe.simple.js`): smallest possible QE flow—creates the encrypted collection with equality support on `ssn`, inserts, and queries by `ssn`. Shows the `ClientEncryption.createEncryptedCollection` API.
+- QE simple (`demo.fle-v2.qe.simple.js`): smallest possible QE flow, creates the encrypted collection with equality support on `ssn`, inserts, and queries by `ssn`. Shows the `ClientEncryption.createEncryptedCollection` API.
 - QE class-based (`demo.fle-v2.qe.class.js`): wraps QE initialization in `FLEv2`, reusing schema and key vault namespaces and ensuring the encrypted collection exists. Easier to integrate into real apps with multiple call sites.
 
 ## OpenSSL helpers (what each option means)
