@@ -17,23 +17,32 @@ Minimal, copy/pasteable Node.js examples that write and read encrypted data with
   - `mongo_crypt_v1` shared library available; set `MONGODB_CRYPT_SHARED_LIB_PATH` to its absolute path for QE and for CSFLE without `mongocryptd`.
 
 ## Quick crypt_shared setup (QE / auto-encryption)
+
+Create a project
 ```bash
-mkdir myproj && cd myproj  # create a fresh demo folder
+ mkdir myproj && cd myproj
+```
 
-# MacOS (pick the right hardware build)
-curl -L https://downloads.mongodb.com/osx/mongo_crypt_shared_v1-macos-arm64-enterprise-8.0.4.tgz \
-  | tar xzvf - lib/mongo_crypt_v1.dylib                # -L follow redirects; tar xzvf extract to ./lib
+Install MongoDB Crypt (Service or Shared Library)
+- MacOS (pick the right hardware build)
+  ```bash
+  curl -L https://downloads.mongodb.com/osx/mongo_crypt_shared_v1-macos-arm64-enterprise-8.0.4.tgz | tar xzvf - lib/mongo_crypt_v1.dylib
+  ```
+- Windows x64
+  ```bash
+  # Download https://downloads.mongodb.com/windows/mongodb-windows-x86_64-enterprise-8.0.4-signed.msi
+  # Copy ./bin/mongo_crypt_v1.dll to myproj/lib
+  ```
+- Linux (AWS / Debian / Ubuntu)
+  ```bash
+  # Use https://www.mongodb.com/download-center/enterprise/releases and pick the correct CPU (ARM vs x86) and the stand-alone crypt_shared package.
 
-# Windows x64
-# Download https://downloads.mongodb.com/windows/mongodb-windows-x86_64-enterprise-8.0.4-signed.msi
-# Copy ./bin/mongo_crypt_v1.dll to myproj/lib
+  xattr -d com.apple.quarantine ./lib/mongo_crypt_v1.dylib  # remove quarantine on macOS; -d deletes the attribute
+  export MONGODB_CRYPT_SHARED_LIB_PATH="$PWD/lib/mongo_crypt_v1.dylib" # absolute path required
+  ```
+  ![](./docs/mdb.prd.ea.download.jpg)
 
-# Linux (AWS / Debian / Ubuntu)
-# Use https://www.mongodb.com/download-center/enterprise/releases and pick the correct CPU (ARM vs x86) and the stand-alone crypt_shared package.
-
-xattr -d com.apple.quarantine ./lib/mongo_crypt_v1.dylib  # remove quarantine on macOS; -d deletes the attribute
-export MONGODB_CRYPT_SHARED_LIB_PATH="$PWD/lib/mongo_crypt_v1.dylib" # absolute path required
-
+```bash
 npm init -y                                          # -y accepts defaults to create package.json
 npm install mongodb mongodb-client-encryption        # drivers + client-side encryption addon
 ```
