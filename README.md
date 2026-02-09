@@ -7,7 +7,12 @@ Minimal, copy/pasteable Node.js examples that write and read encrypted data with
 - `demo.fle-v1.csfle.auto.js`: FLE v1 auto-encryption with a schema map; uses `mongocryptd` (or `crypt_shared`) to transparently encrypt/decrypt client-side.
 - `demo.fle-v2.qe.simple.js`: Smallest Queryable Encryption example that creates an encrypted collection with equality on `ssn`.
 - `demo.fle-v2.qe.class.js`: Same QE flow but wrapped in the `FLEv2` helper class for reuse.
-- `src/lib/FLEv1.js` and `src/lib/FLEv2.js`: Lightweight helpers to initialize key vaults, data keys, and encrypted clients.
+
+## What lives in `src/lib/`
+- `src/lib/FLEv1.js`: CSFLE v1 helper; builds key vault + data keys, returns auto-encryption clients, and offers explicit encrypt/decrypt utilities.
+- `src/lib/FLEv2.js`: QE helper; configures autoEncryption with `crypt_shared`, ensures encrypted collections exist via `ClientEncryption`, and returns ready-to-use clients/collections.
+- `src/lib/key.vault.js`: HashiCorp Vault-backed 96-byte master key fetch/create (base64). Swap in your Vault settings for real environments.
+- `src/lib/key.local.js`: File-based 96-byte master key generator/reader for local demos only—replace with a real KMS in production.
 
 ## Prerequisites
 - Node.js LTS (18+). Install from https://nodejs.org/en/download.
