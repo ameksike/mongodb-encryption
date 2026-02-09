@@ -28,10 +28,20 @@ Install MongoDB Crypt (Service or Shared Library)
   ```bash
   curl -L https://downloads.mongodb.com/osx/mongo_crypt_shared_v1-macos-arm64-enterprise-8.0.4.tgz | tar xzvf - lib/mongo_crypt_v1.dylib
   ```
-- Windows x64
+- Windows x64 EA installer
   ```bash
-  # Download https://downloads.mongodb.com/windows/mongodb-windows-x86_64-enterprise-8.0.4-signed.msi
-  # Copy ./bin/mongo_crypt_v1.dll to myproj/lib
+  # Download https://downloads.mongodb.com/windows/mongodb-windows-x86_64-enterprise-8.2.4-signed.msi
+  powershell -Command "Invoke-WebRequest -Uri 'https://downloads.mongodb.com/windows/mongodb-windows-x86_64-enterprise-8.2.4-signed.msi' -OutFile 'C:\Users\demo\Downloads\mongodb-enterprise.msi'"
+  # Install mongodb-windows-x86_64-enterprise-8.2.4-signed.msi
+  set MONGODB_CRYPT_SHARED_LIB_PATH='C:\Program Files\MongoDB\Server\8.2\bin\mongo_crypt_v1.dll'
+  ```
+
+- Windows x86_64 shared library
+  ```bash
+  # Download https://downloads.mongodb.com/windows/mongo_crypt_shared_v1-windows-x86_64-enterprise-8.2.4.zip
+  powershell -Command "Invoke-WebRequest -Uri 'https://downloads.mongodb.com/windows/mongo_crypt_shared_v1-windows-x86_64-enterprise-8.2.4.zip' -OutFile 'C:\Users\demo\Downloads\mongo_crypt_shared_v1-windows-x86_64-enterprise-8.2.4.zip'"
+  tar -xf mongo_crypt_shared_v1-windows-x86_64-enterprise-8.2.4.zip 'C:\Program Files\MongoDB\crypt_shared\8.2.4'
+  set MONGODB_CRYPT_SHARED_LIB_PATH='C:\Program Files\MongoDB\crypt_shared\8.2.4\bin\mongo_crypt_v1.dll'
   ```
 - Linux (AWS / Debian / Ubuntu)
   ```bash
