@@ -1,6 +1,6 @@
 # MongoDB Encryption Demos (CSFLE & Queryable Encryption)
 
-Minimal, copy/pasteable Node.js examples that write and read encrypted data with MongoDB 8.2+ (Queryable Encryption tested against 8.0.4 server). These samples are for learning and demos only—do not reuse the local keys or settings in production.
+Minimal, copy/pasteable Node.js examples that write and read encrypted data with MongoDB 8.2+ (Queryable Encryption tested against 8.2.4 server). These samples are for learning and demos only, do not reuse the local keys or settings in production.
 
 ## What lives in `src/`
 - `demo.fle-v1.csfle.manual.js`: FLE v1 manual encryption using `ClientEncryption` for explicit encrypt/decrypt before insert/query.
@@ -88,24 +88,30 @@ Each npm script uses the `.env` values above. QE runs need `MONGODB_CRYPT_SHARED
 ## OpenSSL helpers (what each option means)
 - 96-byte hex key for local KMS:
   ```bash
-  openssl rand -hex 96 > hex96_key.txt          # rand = secure RNG, -hex = hex output, 96 = 96 bytes, > writes to file
+  # rand = secure RNG, -hex = hex output, 96 = 96 bytes, > writes to file
+  openssl rand -hex 96 > hex96_key.txt
   ```
 - RSA 2048 key pair:
   ```bash
-  openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048  # genpkey chooses RSA, writes private key, 2048-bit size
-  openssl rsa -pubout -in private_key.pem -out public_key.pem                        # extracts the public key
+  # genpkey chooses RSA, writes private key, 2048-bit size
+  openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
+  # extracts the public key
+  openssl rsa -pubout -in private_key.pem -out public_key.pem
   ```
 - 32-byte AES key (Base64):
   ```bash
-  openssl rand -base64 32 > aes_key.txt         # -base64 encodes the 32 random bytes
+  # -base64 encodes the 32 random bytes
+  openssl rand -base64 32 > aes_key.txt
   ```
 - SHA-256 helper:
   ```bash
-  echo -n "TextoSeguroParaClave" | openssl dgst -sha256   # -n avoids newline, dgst -sha256 hashes the input
+  # -n avoids newline, dgst -sha256 hashes the input
+  echo -n "TextoSeguroParaClave" | openssl dgst -sha256
   ```
 - Local master key (binary):
   ```bash
-  openssl rand -out master-key.bin 96            # -out writes raw bytes; 96 bytes is what the driver expects for local KMS
+  # -out writes raw bytes; 96 bytes is what the driver expects for local KMS
+  openssl rand -out master-key.bin 96
   ```
 
 ## Quick, copy/paste QE starter (8.0.4 server)
