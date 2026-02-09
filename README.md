@@ -1,13 +1,18 @@
 # MongoDB Encryption Demos (CSFLE & Queryable Encryption)
 
-Minimal, copy/pasteable Node.js examples that write and read encrypted data with MongoDB 8.2+ (Queryable Encryption tested against 8.0.4 server). These samples are for learning and demos only—do not reuse the local keys or settings in production.
+Minimal, copy/pasteable Node.js examples that write and read encrypted data with MongoDB 8.2+ (Queryable Encryption tested against 8.2.4 server). These samples are for learning and demos only, do not reuse the local keys or settings in production.
 
 ## What lives in `src/`
 - `demo.fle-v1.csfle.manual.js`: FLE v1 manual encryption using `ClientEncryption` for explicit encrypt/decrypt before insert/query.
 - `demo.fle-v1.csfle.auto.js`: FLE v1 auto-encryption with a schema map; uses `mongocryptd` (or `crypt_shared`) to transparently encrypt/decrypt client-side.
 - `demo.fle-v2.qe.simple.js`: Smallest Queryable Encryption example that creates an encrypted collection with equality on `ssn`.
 - `demo.fle-v2.qe.class.js`: Same QE flow but wrapped in the `FLEv2` helper class for reuse.
-- `src/lib/FLEv1.js` and `src/lib/FLEv2.js`: Lightweight helpers to initialize key vaults, data keys, and encrypted clients.
+
+## What lives in `src/lib/`
+- `src/lib/FLEv1.js`: CSFLE v1 helper; builds key vault + data keys, returns auto-encryption clients, and offers explicit encrypt/decrypt utilities.
+- `src/lib/FLEv2.js`: QE helper; configures autoEncryption with `crypt_shared`, ensures encrypted collections exist via `ClientEncryption`, and returns ready-to-use clients/collections.
+- `src/lib/key.vault.js`: HashiCorp Vault-backed 96-byte master key fetch/create (base64). Swap in your Vault settings for real environments.
+- `src/lib/key.local.js`: File-based 96-byte master key generator/reader for local demos only, replace with a real KMS in production.
 
 ## Prerequisites
 - Node.js LTS (18+). Install from https://nodejs.org/en/download.
@@ -17,23 +22,42 @@ Minimal, copy/pasteable Node.js examples that write and read encrypted data with
   - `mongo_crypt_v1` shared library available; set `MONGODB_CRYPT_SHARED_LIB_PATH` to its absolute path for QE and for CSFLE without `mongocryptd`.
 
 ## Quick crypt_shared setup (QE / auto-encryption)
+
+Create a project
 ```bash
-mkdir myproj && cd myproj  # create a fresh demo folder
+ mkdir myproj && cd myproj
+```
 
-# MacOS (pick the right hardware build)
-curl -L https://downloads.mongodb.com/osx/mongo_crypt_shared_v1-macos-arm64-enterprise-8.0.4.tgz \
-  | tar xzvf - lib/mongo_crypt_v1.dylib                # -L follow redirects; tar xzvf extract to ./lib
+Install MongoDB Crypt (Service or Shared Library)
+- MacOS (pick the right hardware build)
+  ```bash
+  curl -L https://downloads.mongodb.com/osx/mongo_crypt_shared_v1-macos-arm64-enterprise-8.0.4.tgz | tar xzvf - lib/mongo_crypt_v1.dylib
+  ```
+- Windows x64 EA installer
+  ```bash
+  # Download https://downloads.mongodb.com/windows/mongodb-windows-x86_64-enterprise-8.2.4-signed.msi
+  powershell -Command "Invoke-WebRequest -Uri 'https://downloads.mongodb.com/windows/mongodb-windows-x86_64-enterprise-8.2.4-signed.msi' -OutFile 'C:\Users\demo\Downloads\mongodb-enterprise.msi'"
+  # Install mongodb-windows-x86_64-enterprise-8.2.4-signed.msi
+  set MONGODB_CRYPT_SHARED_LIB_PATH='C:\Program Files\MongoDB\Server\8.2\bin\mongo_crypt_v1.dll'
+  ```
 
-# Windows x64
-# Download https://downloads.mongodb.com/windows/mongodb-windows-x86_64-enterprise-8.0.4-signed.msi
-# Copy ./bin/mongo_crypt_v1.dll to myproj/lib
+- Windows x86_64 shared library
+  ```bash
+  # Download https://downloads.mongodb.com/windows/mongo_crypt_shared_v1-windows-x86_64-enterprise-8.2.4.zip
+  powershell -Command "Invoke-WebRequest -Uri 'https://downloads.mongodb.com/windows/mongo_crypt_shared_v1-windows-x86_64-enterprise-8.2.4.zip' -OutFile 'C:\Users\demo\Downloads\mongo_crypt_shared_v1-windows-x86_64-enterprise-8.2.4.zip'"
+  tar -xf mongo_crypt_shared_v1-windows-x86_64-enterprise-8.2.4.zip 'C:\Program Files\MongoDB\crypt_shared\8.2.4'
+  set MONGODB_CRYPT_SHARED_LIB_PATH='C:\Program Files\MongoDB\crypt_shared\8.2.4\bin\mongo_crypt_v1.dll'
+  ```
+- Linux (AWS / Debian / Ubuntu)
+  ```bash
+  # Use https://www.mongodb.com/download-center/enterprise/releases and pick the correct CPU (ARM vs x86) and the stand-alone crypt_shared package.
 
-# Linux (AWS / Debian / Ubuntu)
-# Use https://www.mongodb.com/download-center/enterprise/releases and pick the correct CPU (ARM vs x86) and the stand-alone crypt_shared package.
+  xattr -d com.apple.quarantine ./lib/mongo_crypt_v1.dylib  # remove quarantine on macOS; -d deletes the attribute
+  export MONGODB_CRYPT_SHARED_LIB_PATH="$PWD/lib/mongo_crypt_v1.dylib" # absolute path required
+  ```
+  ![](./docs/mdb.prd.ea.download.jpg)
 
-xattr -d com.apple.quarantine ./lib/mongo_crypt_v1.dylib  # remove quarantine on macOS; -d deletes the attribute
-export MONGODB_CRYPT_SHARED_LIB_PATH="$PWD/lib/mongo_crypt_v1.dylib" # absolute path required
-
+```bash
 npm init -y                                          # -y accepts defaults to create package.json
 npm install mongodb mongodb-client-encryption        # drivers + client-side encryption addon
 ```
@@ -63,30 +87,36 @@ Each npm script uses the `.env` values above. QE runs need `MONGODB_CRYPT_SHARED
 ## What each demo does (developer + security view)
 - CSFLE manual (`demo.fle-v1.csfle.manual.js`): explicitly encrypts `ssn` (deterministic) and `email` (randomized) before `insertOne`, then decrypts on read. Good for understanding per-field control and the cost of handling ciphertext yourself.
 - CSFLE auto (`demo.fle-v1.csfle.auto.js`): uses a schema map so reads/writes happen on plaintext while the driver encrypts/decrypts transparently. Shows how `mongocryptd`/`crypt_shared` participates; safer for apps that want minimal code changes.
-- QE simple (`demo.fle-v2.qe.simple.js`): smallest possible QE flow—creates the encrypted collection with equality support on `ssn`, inserts, and queries by `ssn`. Shows the `ClientEncryption.createEncryptedCollection` API.
+- QE simple (`demo.fle-v2.qe.simple.js`): smallest possible QE flow, creates the encrypted collection with equality support on `ssn`, inserts, and queries by `ssn`. Shows the `ClientEncryption.createEncryptedCollection` API.
 - QE class-based (`demo.fle-v2.qe.class.js`): wraps QE initialization in `FLEv2`, reusing schema and key vault namespaces and ensuring the encrypted collection exists. Easier to integrate into real apps with multiple call sites.
 
 ## OpenSSL helpers (what each option means)
 - 96-byte hex key for local KMS:
   ```bash
-  openssl rand -hex 96 > hex96_key.txt          # rand = secure RNG, -hex = hex output, 96 = 96 bytes, > writes to file
+  # rand = secure RNG, -hex = hex output, 96 = 96 bytes, > writes to file
+  openssl rand -hex 96 > hex96_key.txt
   ```
 - RSA 2048 key pair:
   ```bash
-  openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048  # genpkey chooses RSA, writes private key, 2048-bit size
-  openssl rsa -pubout -in private_key.pem -out public_key.pem                        # extracts the public key
+  # genpkey chooses RSA, writes private key, 2048-bit size
+  openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
+  # extracts the public key
+  openssl rsa -pubout -in private_key.pem -out public_key.pem
   ```
 - 32-byte AES key (Base64):
   ```bash
-  openssl rand -base64 32 > aes_key.txt         # -base64 encodes the 32 random bytes
+  # -base64 encodes the 32 random bytes
+  openssl rand -base64 32 > aes_key.txt
   ```
 - SHA-256 helper:
   ```bash
-  echo -n "TextoSeguroParaClave" | openssl dgst -sha256   # -n avoids newline, dgst -sha256 hashes the input
+  # -n avoids newline, dgst -sha256 hashes the input
+  echo -n "TextoSeguroParaClave" | openssl dgst -sha256
   ```
 - Local master key (binary):
   ```bash
-  openssl rand -out master-key.bin 96            # -out writes raw bytes; 96 bytes is what the driver expects for local KMS
+  # -out writes raw bytes; 96 bytes is what the driver expects for local KMS
+  openssl rand -out master-key.bin 96
   ```
 
 ## Quick, copy/paste QE starter (8.0.4 server)
