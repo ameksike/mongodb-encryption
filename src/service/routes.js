@@ -43,7 +43,7 @@ router.get("/", async (req, res, next) => {
  */
 router.get("/:id", async (req, res, next) => {
     try {
-        const doc = await repo.findById(req.params.id);
+        const doc = await repo.findById(req.params.id, req.query);
         if (!doc) return res.status(404).json({ error: "Not found" });
         res.json(doc);
     } catch (err) { next(err); }

@@ -145,6 +145,8 @@ export function rangeDate(field, from, to) {
 }
 
 /**
+ * Prefix query builder for prefix searches on encrypted fields.
+ * @link https://www.mongodb.com/es/docs/manual/reference/operator/aggregation/encstrstartswith/
  * @param {string} field
  * @param {string} [value]
  * @returns {Object|null}
@@ -155,6 +157,8 @@ export function prefix(field, value) {
 }
 
 /**
+ * Suffix query builder for suffix searches on encrypted fields.
+ * @link https://www.mongodb.com/es/docs/manual/reference/operator/aggregation/encStrEndsWith/#mongodb-expression-exp.-encStrEndsWith
  * @param {string} field
  * @param {string} [value]
  * @returns {Object|null}
@@ -165,6 +169,8 @@ export function suffix(field, value) {
 }
 
 /**
+ * Substring query builder for substring searches on encrypted fields.
+ * @link https://www.mongodb.com/es/docs/manual/reference/operator/aggregation/encstrcontains/
  * @param {string} field
  * @param {string} [value]
  * @returns {Object|null}
