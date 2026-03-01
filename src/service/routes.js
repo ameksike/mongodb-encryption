@@ -1,96 +1,72 @@
 /**
- * Routes – Application layer (HTTP concerns only)
+ * Application layer – Express route handlers.
+ * Parses HTTP input, coerces BSON types, and delegates to the repository.
  *
- * Each handler:
- *  1. Parses / validates HTTP input
- *  2. Delegates to the repository (data layer)
- *  3. Returns a JSON response
- *
- * No MongoDB query logic lives here – that belongs in repository.js.
+ * @module service/routes
  */
 
 import { Router } from "express";
-import { Double } from "mongodb";
 import * as repo from "./repository.js";
+import { coerceTypes } from "./utils.js";
 
 const router = Router();
 
-// ── POST /api/employees/seed ─────────────────────────────────────────────────
-// Must be registered BEFORE the /:id route so Express doesn't treat "seed" as an id.
+/**
+ * Seed the database with sample employee documents.
+ */
 router.post("/seed", async (_req, res, next) => {
     try {
-        const result = await repo.seedData();
-        res.status(201).json(result);
-    } catch (err) {
-        next(err);
-    }
+        res.status(201).json(await repo.seedData());
+    } catch (err) { next(err); }
 });
 
-// ── POST /api/employees ──────────────────────────────────────────────────────
+/**
+ * Create a new employee document.
+ */
 router.post("/", async (req, res, next) => {
     try {
-        const doc = req.body;
-        // Coerce types to match the encrypted field BSON types
-        if (doc.employeeId != null) doc.employeeId = parseInt(doc.employeeId, 10);
-        if (doc.age != null) doc.age = parseInt(doc.age, 10);
-        if (doc.salary != null) doc.salary = new Double(parseFloat(doc.salary));
-        if (doc.birthDate) doc.birthDate = new Date(doc.birthDate);
-
-        const created = await repo.create(doc);
-        res.status(201).json(created);
-    } catch (err) {
-        next(err);
-    }
+        res.status(201).json(await repo.create(coerceTypes(req.body)));
+    } catch (err) { next(err); }
 });
 
-// ── GET /api/employees ───────────────────────────────────────────────────────
-// All search parameters are passed as query-string key/values.
-// See repository.js → buildQuery() for the complete mapping.
+/**
+ * Get all employees, optionally filtered by query-string parameters.
+ */
 router.get("/", async (req, res, next) => {
     try {
-        const results = await repo.findAll(req.query);
-        res.json(results);
-    } catch (err) {
-        next(err);
-    }
+        res.json(await repo.findAll(req.query));
+    } catch (err) { next(err); }
 });
 
-// ── GET /api/employees/:id ───────────────────────────────────────────────────
+/**
+ * Get a single employee by ObjectId.
+ */
 router.get("/:id", async (req, res, next) => {
     try {
         const doc = await repo.findById(req.params.id);
         if (!doc) return res.status(404).json({ error: "Not found" });
         res.json(doc);
-    } catch (err) {
-        next(err);
-    }
+    } catch (err) { next(err); }
 });
 
-// ── PUT /api/employees/:id ───────────────────────────────────────────────────
+/**
+ * Update a single employee by ObjectId.
+ */
 router.put("/:id", async (req, res, next) => {
     try {
-        const changes = req.body;
-        if (changes.employeeId != null) changes.employeeId = parseInt(changes.employeeId, 10);
-        if (changes.age != null) changes.age = parseInt(changes.age, 10);
-        if (changes.salary != null) changes.salary = new Double(parseFloat(changes.salary));
-        if (changes.birthDate) changes.birthDate = new Date(changes.birthDate);
-
-        const updated = await repo.update(req.params.id, changes);
+        const updated = await repo.update(req.params.id, coerceTypes(req.body));
         if (!updated) return res.status(404).json({ error: "Not found" });
         res.json(updated);
-    } catch (err) {
-        next(err);
-    }
+    } catch (err) { next(err); }
 });
 
-// ── DELETE /api/employees/:id ────────────────────────────────────────────────
+/**
+ * Delete a single employee by ObjectId.
+ */
 router.delete("/:id", async (req, res, next) => {
     try {
-        const result = await repo.remove(req.params.id);
-        res.json(result);
-    } catch (err) {
-        next(err);
-    }
+        res.json(await repo.remove(req.params.id));
+    } catch (err) { next(err); }
 });
 
 export default router;

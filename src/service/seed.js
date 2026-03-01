@@ -15,6 +15,7 @@
 
 import { Double } from "mongodb";
 
+/** @type {Object[]} */
 export const employees = [
     {
         name: "Alice Johnson",
