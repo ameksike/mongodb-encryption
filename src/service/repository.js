@@ -18,10 +18,6 @@ import { ObjectId } from "mongodb";
 import { buildQuery, getCollection } from "./utils.js";
 import { employees as seedDocs } from "./seed.js";
 
-// ─── Public API ─────────────────────────────────────────────────────────────
-
-
-
 /**
  * Insert a new employee document.
  *
@@ -38,7 +34,7 @@ export async function create(doc) {
  * Aggregation projection that strips the internal `__safeContent__` field.
  * @type {Object}
  */
-const WITHOUT_SAFE_CONTENT = { $unset: "__safeContent__" };
+const WITHOUT_SAFE_CONTENT = { __safeContent__: 0 };
 
 /**
  * Find a single employee by ObjectId.
@@ -46,13 +42,17 @@ const WITHOUT_SAFE_CONTENT = { $unset: "__safeContent__" };
  * @param {string} id - Hex string ObjectId.
  * @returns {Promise<Object|null>}
  */
-export async function findById(id) {
+export async function findById(id, params = {}) {
     const coll = getCollection();
-    const [doc = null] = await coll.aggregate([
-        { $match: { _id: new ObjectId(id) } },
-        WITHOUT_SAFE_CONTENT,
-    ]).toArray();
-    return doc;
+    if (params?.aggregate || params?.aggregate === undefined) {
+        const [doc = null] = await coll.aggregate([
+            { $match: { _id: new ObjectId(id) } },
+            { $unset: "__safeContent__" },
+        ]).toArray();
+        return doc;
+    } else {
+        return coll.findOne({ _id: new ObjectId(id) }, { projection: WITHOUT_SAFE_CONTENT });
+    }
 }
 
 /**
@@ -65,11 +65,15 @@ export async function findById(id) {
 export async function findAll(params = {}) {
     const coll = getCollection();
     const filter = buildQuery(params);
-    const pipeline = [
-        ...(Object.keys(filter).length ? [{ $match: filter }] : []),
-        WITHOUT_SAFE_CONTENT,
-    ];
-    return coll.aggregate(pipeline).toArray();
+    if (params?.aggregate || params?.aggregate === undefined) {
+        const pipeline = [
+            ...(Object.keys(filter).length ? [{ $match: filter }] : []),
+            { $unset: "__safeContent__" },
+        ];
+        return coll.aggregate(pipeline).toArray();
+    } else {
+        return coll.find(filter, { projection: WITHOUT_SAFE_CONTENT }).toArray();
+    }
 }
 
 /**

@@ -408,8 +408,12 @@ queryable encrypted field.
 - Its size grows with the number of queryable encrypted fields and the `contention` factor.
 - It does **not** appear when reading through an auto-decrypting client (the driver strips it).
 
-This service uses the aggregation framework with `{ $unset: "__safeContent__" }` to strip
+This service uses `find()` with `{ projection: { __safeContent__: 0 } }` to strip
 this field from all query responses, keeping the API output clean.
+
+> **Note:** Aggregation `$match` with `{ $unset: "__safeContent__" }` is **not** used because
+> the csfle library does not support preview operators (`$encStrStartsWith`,
+> `$encStrEndsWith`, `$encStrContains`) inside aggregation pipeline stages.
 
 ---
 
