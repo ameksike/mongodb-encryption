@@ -5,8 +5,21 @@
  * and exposes the encrypted collection for the REST service.
  */
 import { FLEv2 } from "../lib/FLEv2.js";
-import { getMasterKey } from "../lib/key.vault.js";
+import { getMasterKey as getMasterKeyFromVault } from "../lib/key.vault.js";
+import { getMasterKey as getMasterKeyFromLocal } from "../lib/key.local.js";
 import { encryptedFieldsMap, COLLECTION_NAME, DATABASE_NAME } from "./config.js";
+
+/**
+ * Try Vault first; fall back to local file-based key when Vault is unreachable.
+ */
+async function getMasterKey() {
+    try {
+        return await getMasterKeyFromVault();
+    } catch (err) {
+        console.warn("Vault unavailable, falling back to local master key:", err.cause?.code || err.message);
+        return await getMasterKeyFromLocal();
+    }
+}
 
 let fleV2 = null;
 

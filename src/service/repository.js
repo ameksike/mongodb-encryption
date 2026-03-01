@@ -14,7 +14,7 @@
  *   substring  → $encStrContains    (address)   [Preview – 8.2]
  */
 
-import { ObjectId } from "mongodb";
+import { ObjectId, Double } from "mongodb";
 import { getCollection } from "./db.js";
 import { employees as seedDocs } from "./seed.js";
 
@@ -43,12 +43,12 @@ function rangeInt(field, min, max) {
     return { [field]: cond };
 }
 
-/** Range on encrypted double field (min / max) */
+/** Range on encrypted double field (min / max) – wraps with BSON Double */
 function rangeDouble(field, min, max) {
     if (min === undefined && max === undefined) return null;
     const cond = {};
-    if (min !== undefined) cond.$gte = parseFloat(min);
-    if (max !== undefined) cond.$lte = parseFloat(max);
+    if (min !== undefined) cond.$gte = new Double(parseFloat(min));
+    if (max !== undefined) cond.$lte = new Double(parseFloat(max));
     return { [field]: cond };
 }
 
@@ -147,15 +147,16 @@ export async function findAll(params = {}) {
 /**
  * Update a single employee by ObjectId.
  * Returns the updated document.
+ *
+ * Note: QE does not support findAndModify with new:true (returnDocument:"after"),
+ * so we use updateOne followed by a separate findOne.
  */
 export async function update(id, changes) {
     const coll = getCollection();
-    const result = await coll.findOneAndUpdate(
-        { _id: new ObjectId(id) },
-        { $set: changes },
-        { returnDocument: "after" },
-    );
-    return result;
+    const filter = { _id: new ObjectId(id) };
+    const result = await coll.updateOne(filter, { $set: changes });
+    if (result.matchedCount === 0) return null;
+    return coll.findOne(filter);
 }
 
 /**

@@ -10,6 +10,7 @@
  */
 
 import { Router } from "express";
+import { Double } from "mongodb";
 import * as repo from "./repository.js";
 
 const router = Router();
@@ -29,10 +30,10 @@ router.post("/seed", async (_req, res, next) => {
 router.post("/", async (req, res, next) => {
     try {
         const doc = req.body;
-        // Coerce types that arrive as JSON strings
-        if (doc.employeeId) doc.employeeId = parseInt(doc.employeeId, 10);
-        if (doc.age) doc.age = parseInt(doc.age, 10);
-        if (doc.salary) doc.salary = parseFloat(doc.salary);
+        // Coerce types to match the encrypted field BSON types
+        if (doc.employeeId != null) doc.employeeId = parseInt(doc.employeeId, 10);
+        if (doc.age != null) doc.age = parseInt(doc.age, 10);
+        if (doc.salary != null) doc.salary = new Double(parseFloat(doc.salary));
         if (doc.birthDate) doc.birthDate = new Date(doc.birthDate);
 
         const created = await repo.create(doc);
@@ -69,9 +70,9 @@ router.get("/:id", async (req, res, next) => {
 router.put("/:id", async (req, res, next) => {
     try {
         const changes = req.body;
-        if (changes.employeeId) changes.employeeId = parseInt(changes.employeeId, 10);
-        if (changes.age) changes.age = parseInt(changes.age, 10);
-        if (changes.salary) changes.salary = parseFloat(changes.salary);
+        if (changes.employeeId != null) changes.employeeId = parseInt(changes.employeeId, 10);
+        if (changes.age != null) changes.age = parseInt(changes.age, 10);
+        if (changes.salary != null) changes.salary = new Double(parseFloat(changes.salary));
         if (changes.birthDate) changes.birthDate = new Date(changes.birthDate);
 
         const updated = await repo.update(req.params.id, changes);

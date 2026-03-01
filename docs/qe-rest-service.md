@@ -309,6 +309,49 @@ curl -X POST http://localhost:3000/api/employees/seed
 
 ---
 
+## The `__safeContent__` Field
+
+When you inspect a document directly (e.g. via `mongosh` without an auto-decrypting client),
+you will see an extra array field called `__safeContent__`:
+
+```json
+{
+  "_id": ObjectId("..."),
+  "name": "Alice Johnson",
+  "ssn": Binary(6, "..."),
+  "age": Binary(6, "..."),
+  "__safeContent__": [
+    Binary(0, "aGVsbG8..."),
+    Binary(0, "d29ybGQ..."),
+    ...
+  ]
+}
+```
+
+**What it is:** An array of encrypted index tokens (HMAC-derived tags) that MongoDB stores
+alongside every document in a QE-encrypted collection. Each entry corresponds to one
+queryable encrypted field.
+
+**How it works:**
+
+- On **insert / update**, the driver generates encrypted tokens from the plaintext values
+  and writes them into `__safeContent__`.
+- On **query**, the driver encrypts the search value into a matching token and the server
+  compares tokens in `__safeContent__` to find matches.
+- The server only sees opaque binary tags — it never learns the actual values.
+
+**Key rules:**
+
+- Never modify or remove it manually — doing so will break queries on encrypted fields.
+- It is automatically managed by the driver's `autoEncryption` layer.
+- Its size grows with the number of queryable encrypted fields and the `contention` factor.
+- It does **not** appear when reading through an auto-decrypting client (the driver strips it).
+
+In short: `__safeContent__` is the mechanism that makes "queryable" encryption possible —
+encrypted search indexes stored alongside the document.
+
+---
+
 ## Key Limitations
 
 1. **Cannot combine equality and range** on the same field – choose one when creating the collection
@@ -350,8 +393,13 @@ The contention factor controls the trade-off between read and write performance:
 
 ## Troubleshooting
 
+### Vault unavailable (`ECONNREFUSED 127.0.0.1:8200`)
+
+If HashiCorp Vault is not running the service automatically falls back to a local
+file-based master key (`cfg/master-key.bin`). You will see a warning in the console:
+
 ```
-Failed to start: TypeError: fetch failed
+Vault unavailable, falling back to local master key: ECONNREFUSED+Failed to start: TypeError: fetch failed
     at c:\data\dev\check\mongodb-encryption\lib\internal\deps\undici\undici.js:13502:13
     at process.processTicksAndRejections (c:\data\dev\check\mongodb-encryption\lib\internal\process\task_queues.js:105:5)
     at async get (c:\data\dev\check\mongodb-encryption\src\lib\key.vault.js:47:17)
@@ -364,6 +412,21 @@ Failed to start: TypeError: fetch failed
 server.js:40
 Process exited with code 1
 ```
+
+This is safe for local development and demos. For production, start Vault or
+configure a real KMS provider.
+
+### Schema mismatch after changing `encryptedFieldsMap`
+
+The encrypted collection schema is **immutable**. If you change `config.js`
+(e.g. add/remove fields or change query types), you must drop the old collection
+first:
+
+```bash
+mongosh --eval 'db.getSiblingDB("qe").employees.drop()'
+```
+
+Then restart the service so it recreates the collection with the new schema.
 
 ## References
 
