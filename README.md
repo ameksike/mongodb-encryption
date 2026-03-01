@@ -156,6 +156,9 @@ console.log(await coll.findOne({ ssn: "123-45-6789" }));
     - [Supported Operations for Queryable Encryption](https://www.mongodb.com/docs/manual/core/queryable-encryption/reference/supported-operations/)
     - [Queryable Encryption quick-start](https://www.mongodb.com/docs/manual/core/queryable-encryption/quick-start/)
     - [Queryable Encryption Dependencies](https://www.mongodb.com/docs/manual/core/queryable-encryption/install/?language-no-dependencies=nodejs&operating-system=windows)
+    - [Apple CASE - 2025-01-27 - Queryable Encryption demonstration](https://wiki.corp.mongodb.com/spaces/~matthew.royal@mongodb.com/pages/314415028/Apple+CASE+-+2025-01-27+-+Queryable+Encryption+demonstration)
+    - [Queryable-Encryption-BankAccount Masyukun](https://github.com/masyukun/queryable-encryption-java-bankaccount)
+    - [Queryable-Encryption BankAccount Demo](https://github.com/mongodb-developer/queryable-encryption-java-bankaccount)
 - Downloads
   - [MongoDB Enterprise Server Download](https://www.mongodb.com/try/download/enterprise)
   - [MongoDB Docker Image Download](https://hub.docker.com/_/mongo)

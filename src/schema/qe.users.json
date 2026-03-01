@@ -1,19 +1,28 @@
 {
   "fields": [
     {
-      "path": "email",
-      "bsonType": "string",
-      "queries": { "queryType": "equality" }
-    },
-    {
       "path": "ssn",
       "bsonType": "string",
+      "queries": { "queryType": "equality", "contention": 0 }
+    },
+    {
+      "path": "patientRecord.ssn",
+      "bsonType": "string",
       "queries": { "queryType": "equality" }
     },
     {
-      "path": "age",
+      "path": "patientRecord.billing",
+      "bsonType": "object"
+    },
+    {
+      "path": "patientRecord.billAmount",
       "bsonType": "int",
-      "queries": { "queryType": "range" }
+      "queries": {
+        "queryType": "range",
+        "sparsity": 1,
+        "min": 0,
+        "max": 200000
+      }
     }
   ]
 }

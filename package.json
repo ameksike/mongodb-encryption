@@ -8,6 +8,7 @@
     "demo:cs:manual": "node src/demo.fle-v1.csfle.manual.js",
     "demo:qe:simple": "node src/demo.fle-v2.qe.simple.js",
     "demo:qe:class": "node src/demo.fle-v2.qe.class.js",
+    "demo:qe:service": "node src/demo.fle-v2.qe.service.js",
     "test": "node --test"
   },
   "keywords": [],
@@ -16,6 +17,7 @@
   "description": "",
   "dependencies": {
     "dotenv": "^17.2.3",
+    "express": "^5.1.0",
     "mongodb": "^7.0.0",
     "mongodb-client-encryption": "^7.0.0"
   }
