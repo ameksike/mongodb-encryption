@@ -18,7 +18,7 @@ npm run demo:qe:service  # start the server at http://localhost:3000
 Load sample data:
 
 ```bash
-curl -X POST http://localhost:3000/api/employees/seed
+curl --request POST --url http://localhost:3000/api/employees/seed
 ```
 
 ---
@@ -27,20 +27,20 @@ curl -X POST http://localhost:3000/api/employees/seed
 
 ```
 src/service/
-├── index.js          # Entry point – Express server
-├── routes.js         # Application layer – HTTP handlers
-├── repository.js     # Data layer – CRUD + QE query builders
-├── config.js         # encryptedFieldsMap – QE configuration
-├── db.js             # Encrypted connection via FLEv2
-└── seed.js           # Sample data
+├── server.js        # Express server – boot sequence
+├── routes.js        # Application layer – HTTP handlers
+├── repository.js    # Data layer – CRUD operations
+├── utils.js         # Query builders, type coercion, DB connection
+├── config.js        # encryptedFieldsMap – QE configuration
+└── seed.js          # Sample data
 ```
 
 | Layer | File | Responsibility |
 |---|---|---|
 | **Application** | `routes.js` | Parses HTTP input, validates, delegates to repository, returns JSON |
-| **Data** | `repository.js` | Builds MongoDB QE queries, executes CRUD operations |
+| **Data** | `repository.js` | Executes CRUD operations against the encrypted collection |
+| **Utilities** | `utils.js` | QE query builders, BSON type coercion, DB init and collection access |
 | **Config** | `config.js` | Defines which fields are encrypted and with which query type |
-| **Infrastructure** | `db.js` | Initialises `FLEv2` with `crypt_shared` and key vault |
 
 ---
 
@@ -82,13 +82,18 @@ Finds documents where an encrypted field exactly matches a given value.
 }
 ```
 
-**Usage examples:**
+**Curl – equality on string (ssn):**
 ```bash
-# Find by exact SSN
-curl "http://localhost:3000/api/employees?ssn=123-45-6789"
+curl --request GET \
+  --url "http://localhost:3000/api/employees?ssn=123-45-6789" \
+  --header "Accept: application/json"
+```
 
-# Find by exact employeeId
-curl "http://localhost:3000/api/employees?employeeId=1001"
+**Curl – equality on int (employeeId):**
+```bash
+curl --request GET \
+  --url "http://localhost:3000/api/employees?employeeId=1001" \
+  --header "Accept: application/json"
 ```
 
 ---
@@ -131,22 +136,39 @@ Finds documents where an encrypted numeric or date field falls within a given ra
 }
 ```
 
-**Usage examples:**
+**Curl – range on int (age between 25 and 40):**
 ```bash
-# Employees aged 25 to 40
-curl "http://localhost:3000/api/employees?ageMin=25&ageMax=40"
+curl --request GET \
+  --url "http://localhost:3000/api/employees?ageMin=25&ageMax=40" \
+  --header "Accept: application/json"
+```
 
-# Salary between 70000 and 100000
-curl "http://localhost:3000/api/employees?salaryMin=70000&salaryMax=100000"
+**Curl – range on double (salary between 70k and 100k):**
+```bash
+curl --request GET \
+  --url "http://localhost:3000/api/employees?salaryMin=70000&salaryMax=100000" \
+  --header "Accept: application/json"
+```
 
-# Born between 1980 and 1995
-curl "http://localhost:3000/api/employees?birthDateFrom=1980-01-01&birthDateTo=1995-12-31"
+**Curl – range on date (born between 1980 and 1995):**
+```bash
+curl --request GET \
+  --url "http://localhost:3000/api/employees?birthDateFrom=1980-01-01&birthDateTo=1995-12-31" \
+  --header "Accept: application/json"
+```
 
-# Lower bound only (older than 35)
-curl "http://localhost:3000/api/employees?ageMin=35"
+**Curl – lower bound only (older than 35):**
+```bash
+curl --request GET \
+  --url "http://localhost:3000/api/employees?ageMin=35" \
+  --header "Accept: application/json"
+```
 
-# Upper bound only (salary up to 90000)
-curl "http://localhost:3000/api/employees?salaryMax=90000"
+**Curl – upper bound only (salary up to 90k):**
+```bash
+curl --request GET \
+  --url "http://localhost:3000/api/employees?salaryMax=90000" \
+  --header "Accept: application/json"
 ```
 
 ---
@@ -166,17 +188,23 @@ Finds documents where an encrypted field starts with a given string.
 {
     "path": "email",
     "bsonType": "string",
-    "queries": { "queryType": "prefixPreview", "contention": 8 }
+    "queries": {
+        "queryType": "prefixPreview",
+        "contention": 8,
+        "strMinQueryLength": 3,
+        "strMaxQueryLength": 60,
+        "strMaxLength": 60,
+        "caseSensitive": false,
+        "diacriticSensitive": false
+    }
 }
 ```
 
-**Usage examples:**
+**Curl – emails starting with "alice":**
 ```bash
-# Emails starting with "alice"
-curl "http://localhost:3000/api/employees?emailPrefix=alice"
-
-# Emails starting with "carlos"
-curl "http://localhost:3000/api/employees?emailPrefix=carlos"
+curl --request GET \
+  --url "http://localhost:3000/api/employees?emailPrefix=alice" \
+  --header "Accept: application/json"
 ```
 
 ---
@@ -196,14 +224,23 @@ Finds documents where an encrypted field ends with a given string.
 {
     "path": "phone",
     "bsonType": "string",
-    "queries": { "queryType": "suffixPreview", "contention": 8 }
+    "queries": {
+        "queryType": "suffixPreview",
+        "contention": 8,
+        "strMinQueryLength": 3,
+        "strMaxQueryLength": 20,
+        "strMaxLength": 20,
+        "caseSensitive": false,
+        "diacriticSensitive": false
+    }
 }
 ```
 
-**Usage examples:**
+**Curl – phone numbers ending in "2001":**
 ```bash
-# Phone numbers ending in "2001"
-curl "http://localhost:3000/api/employees?phoneSuffix=2001"
+curl --request GET \
+  --url "http://localhost:3000/api/employees?phoneSuffix=2001" \
+  --header "Accept: application/json"
 ```
 
 ---
@@ -223,29 +260,45 @@ Finds documents where an encrypted field contains a given string.
 {
     "path": "address",
     "bsonType": "string",
-    "queries": { "queryType": "substringPreview", "contention": 8 }
+    "queries": {
+        "queryType": "substringPreview",
+        "contention": 8,
+        "strMinQueryLength": 3,
+        "strMaxQueryLength": 60,
+        "strMaxLength": 60,
+        "caseSensitive": false,
+        "diacriticSensitive": false
+    }
 }
 ```
 
-**Usage examples:**
+**Curl – addresses containing "Springfield":**
 ```bash
-# Addresses containing "Springfield"
-curl "http://localhost:3000/api/employees?addressContains=Springfield"
-
-# Addresses containing "Avenue"
-curl "http://localhost:3000/api/employees?addressContains=Avenue"
+curl --request GET \
+  --url "http://localhost:3000/api/employees?addressContains=Springfield" \
+  --header "Accept: application/json"
 ```
 
 ---
 
 ## REST Endpoints
 
+### Seed sample data
+
+```bash
+curl --request POST \
+  --url http://localhost:3000/api/employees/seed \
+  --header "Accept: application/json"
+```
+
 ### Create an employee
 
 ```bash
-curl -X POST http://localhost:3000/api/employees \
-  -H "Content-Type: application/json" \
-  -d '{
+curl --request POST \
+  --url http://localhost:3000/api/employees \
+  --header "Content-Type: application/json" \
+  --header "Accept: application/json" \
+  --data '{
     "name": "Frank Miller",
     "department": "Engineering",
     "ssn": "333-44-5555",
@@ -259,40 +312,48 @@ curl -X POST http://localhost:3000/api/employees \
   }'
 ```
 
-### List / search employees
+### List all employees
 
 ```bash
-# All employees
-curl http://localhost:3000/api/employees
+curl --request GET \
+  --url http://localhost:3000/api/employees \
+  --header "Accept: application/json"
+```
 
-# Combined filters
-curl "http://localhost:3000/api/employees?department=Engineering&ageMin=25&ageMax=35"
+### Combined filters
+
+```bash
+curl --request GET \
+  --url "http://localhost:3000/api/employees?department=Engineering&ageMin=25&ageMax=35" \
+  --header "Accept: application/json"
 ```
 
 ### Get by ID
 
+Replace `<objectId>` with an actual `_id` value from a previous response.
+
 ```bash
-curl http://localhost:3000/api/employees/<objectId>
+curl --request GET \
+  --url http://localhost:3000/api/employees/<objectId> \
+  --header "Accept: application/json"
 ```
 
 ### Update an employee
 
 ```bash
-curl -X PUT http://localhost:3000/api/employees/<objectId> \
-  -H "Content-Type: application/json" \
-  -d '{ "salary": 90000.00, "department": "Senior Engineering" }'
+curl --request PUT \
+  --url http://localhost:3000/api/employees/<objectId> \
+  --header "Content-Type: application/json" \
+  --header "Accept: application/json" \
+  --data '{ "salary": 90000.00, "department": "Senior Engineering" }'
 ```
 
 ### Delete an employee
 
 ```bash
-curl -X DELETE http://localhost:3000/api/employees/<objectId>
-```
-
-### Load sample data
-
-```bash
-curl -X POST http://localhost:3000/api/employees/seed
+curl --request DELETE \
+  --url http://localhost:3000/api/employees/<objectId> \
+  --header "Accept: application/json"
 ```
 
 ---
@@ -347,8 +408,8 @@ queryable encrypted field.
 - Its size grows with the number of queryable encrypted fields and the `contention` factor.
 - It does **not** appear when reading through an auto-decrypting client (the driver strips it).
 
-In short: `__safeContent__` is the mechanism that makes "queryable" encryption possible —
-encrypted search indexes stored alongside the document.
+This service uses the aggregation framework with `{ $unset: "__safeContent__" }` to strip
+this field from all query responses, keeping the API output clean.
 
 ---
 
@@ -360,7 +421,8 @@ encrypted search indexes stored alongside the document.
 4. **Cannot compare encrypted fields with `null`** or regular expressions
 5. **Does not support arrays of documents** – fields inside arrays cannot be automatically encrypted
 6. **Does not support `updateMany`** or `bulkWrite` with multiple update/delete operations
-7. **Prefix/Suffix/Substring are in Preview** – the GA release will be incompatible with the preview
+7. **Does not support `findAndModify` with `new: true`** – use `updateOne` + `findOne` instead
+8. **Prefix/Suffix/Substring are in Preview** – the GA release will be incompatible with the preview
 
 ## `contention` Parameter
 
@@ -387,6 +449,7 @@ The contention factor controls the trade-off between read and write performance:
 | `MONGODB_CRYPT_SHARED_LIB_PATH` | — | Absolute path to `mongo_crypt_v1` |
 | `KEYVAULT_DATABASE` | `encryption` | Key vault database |
 | `KEYVAULT_COLLECTION` | `keyVault` | Key vault collection |
+| `QE_ENABLE_PREVIEW` | `false` | Set to `true` to enable prefix/suffix/substring |
 | `PORT` | `3000` | Express server port |
 
 ---
@@ -399,7 +462,8 @@ If HashiCorp Vault is not running the service automatically falls back to a loca
 file-based master key (`cfg/master-key.bin`). You will see a warning in the console:
 
 ```
-Vault unavailable, falling back to local master key: ECONNREFUSED+Failed to start: TypeError: fetch failed
+Vault unavailable, falling back to local master key: ECONNREFUSED
+Failed to start: TypeError: fetch failed
     at c:\data\dev\check\mongodb-encryption\lib\internal\deps\undici\undici.js:13502:13
     at process.processTicksAndRejections (c:\data\dev\check\mongodb-encryption\lib\internal\process\task_queues.js:105:5)
     at async get (c:\data\dev\check\mongodb-encryption\src\lib\key.vault.js:47:17)
@@ -408,7 +472,6 @@ Vault unavailable, falling back to local master key: ECONNREFUSED+Failed to star
     at async start (file:///C:/data/dev/check/mongodb-encryption/src/service/server.js:32:9) {stack: 'TypeError: fetch failed
     at node:internal/…ongodb-encryption/src/service/server.js:32:9)', message: 'fetch failed', cause: Error: connect ECONNREFUSED 127.0.0.1:8200
    …onnectWrap.afterConnect [as oncomplete] (node…}
-
 server.js:40
 Process exited with code 1
 ```
@@ -420,10 +483,16 @@ configure a real KMS provider.
 
 The encrypted collection schema is **immutable**. If you change `config.js`
 (e.g. add/remove fields or change query types), you must drop the old collection
-first:
+and its internal QE collections first:
 
 ```bash
-mongosh --eval 'db.getSiblingDB("qe").employees.drop()'
+mongosh --eval '
+  const db = db.getSiblingDB("qe");
+  db.employees.drop();
+  db["enxcol_.employees.esc"].drop();
+  db["enxcol_.employees.ecoc"].drop();
+  db["enxcol_.employees.ecc"].drop();
+'
 ```
 
 Then restart the service so it recreates the collection with the new schema.

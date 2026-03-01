@@ -35,6 +35,12 @@ export async function create(doc) {
 }
 
 /**
+ * Aggregation projection that strips the internal `__safeContent__` field.
+ * @type {Object}
+ */
+const WITHOUT_SAFE_CONTENT = { $unset: "__safeContent__" };
+
+/**
  * Find a single employee by ObjectId.
  *
  * @param {string} id - Hex string ObjectId.
@@ -42,7 +48,11 @@ export async function create(doc) {
  */
 export async function findById(id) {
     const coll = getCollection();
-    return coll.findOne({ _id: new ObjectId(id) });
+    const [doc = null] = await coll.aggregate([
+        { $match: { _id: new ObjectId(id) } },
+        WITHOUT_SAFE_CONTENT,
+    ]).toArray();
+    return doc;
 }
 
 /**
@@ -55,7 +65,11 @@ export async function findById(id) {
 export async function findAll(params = {}) {
     const coll = getCollection();
     const filter = buildQuery(params);
-    return coll.find(filter).toArray();
+    const pipeline = [
+        ...(Object.keys(filter).length ? [{ $match: filter }] : []),
+        WITHOUT_SAFE_CONTENT,
+    ];
+    return coll.aggregate(pipeline).toArray();
 }
 
 /**
