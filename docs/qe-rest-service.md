@@ -12,7 +12,7 @@ Help developers understand Queryable Encryption by providing a single working se
 
 ```bash
 npm install              # install dependencies (express, mongodb, etc.)
-npm run service:qe       # start the server at http://localhost:3000
+npm run demo:qe:service  # start the server at http://localhost:3000
 ```
 
 Load sample data:
@@ -347,6 +347,23 @@ The contention factor controls the trade-off between read and write performance:
 | `PORT` | `3000` | Express server port |
 
 ---
+
+## Troubleshooting
+
+```
+Failed to start: TypeError: fetch failed
+    at c:\data\dev\check\mongodb-encryption\lib\internal\deps\undici\undici.js:13502:13
+    at process.processTicksAndRejections (c:\data\dev\check\mongodb-encryption\lib\internal\process\task_queues.js:105:5)
+    at async get (c:\data\dev\check\mongodb-encryption\src\lib\key.vault.js:47:17)
+    at async getMasterKey (c:\data\dev\check\mongodb-encryption\src\lib\key.vault.js:17:27)
+    at async initDatabase (c:\data\dev\check\mongodb-encryption\src\service\db.js:30:27)
+    at async start (file:///C:/data/dev/check/mongodb-encryption/src/service/server.js:32:9) {stack: 'TypeError: fetch failed
+    at node:internal/…ongodb-encryption/src/service/server.js:32:9)', message: 'fetch failed', cause: Error: connect ECONNREFUSED 127.0.0.1:8200
+   …onnectWrap.afterConnect [as oncomplete] (node…}
+
+server.js:40
+Process exited with code 1
+```
 
 ## References
 

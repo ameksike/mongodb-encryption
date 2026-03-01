@@ -16,7 +16,6 @@
 
 export const COLLECTION_NAME = "employees";
 export const DATABASE_NAME = process.env.MONGODB_DATABASE || "qe";
-
 export const encryptedFieldsMap = {
     encryptedFields: {
         fields: [

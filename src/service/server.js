@@ -26,16 +26,18 @@ app.use((err, _req, res, _next) => {
 });
 
 // Boot sequence: connect to MongoDB first, then listen
-try {
-    console.log("Connecting to MongoDB with Queryable Encryption…");
-    await initDatabase();
-    console.log("Database ready.");
+export async function start() {
+    try {
+        console.log("Connecting to MongoDB with Queryable Encryption…");
+        await initDatabase();
+        console.log("Database ready.");
 
-    app.listen(PORT, () => {
-        console.log(`QE REST Service listening on http://localhost:${PORT}`);
-        console.log(`Try: GET http://localhost:${PORT}/api/employees`);
-    });
-} catch (err) {
-    console.error("Failed to start:", err);
-    process.exit(1);
+        app.listen(PORT, () => {
+            console.log(`QE REST Service listening on http://localhost:${PORT}`);
+            console.log(`Try: GET http://localhost:${PORT}/api/employees`);
+        });
+    } catch (err) {
+        console.error("Failed to start:", err);
+        process.exit(1);
+    }
 }
