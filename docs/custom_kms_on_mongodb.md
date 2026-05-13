@@ -46,7 +46,7 @@ MongoDB warns that if the application relies on server-side schema only, a compr
 
 ## The layered architecture
 
-![](./custom_kms_on_mongodb.png)
+![](./rsc/custom_kms_on_mongodb.png)
 
 ## Layer 1. External root of trust
 
