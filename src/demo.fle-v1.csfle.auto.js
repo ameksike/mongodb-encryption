@@ -40,6 +40,9 @@ dotenv.config({ override: true });
         const schemaMap = {
             [`${MONGODB_DATABASE}.${MONGODB_COLLECTION}`]: {
                 bsonType: "object",
+                /*encryptMetadata: {
+                    keyId: [dataKeyId],
+                },*/
                 properties: {
                     ssn: {
                         encrypt: {
