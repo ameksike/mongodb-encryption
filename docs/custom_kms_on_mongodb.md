@@ -4,6 +4,8 @@
 
 A custom key management service can be built on top of MongoDB, but it must be described precisely. MongoDB can act as the persistence layer for encrypted key records, metadata, policy state, audit data, and encrypted application data, while a Node.js application implements the KMS control plane and encryption orchestration. Queryable Encryption and Client-Side Field Level Encryption are not themselves a KMS. They are client-side encryption mechanisms that consume keys and use MongoDB as the storage system for encrypted fields and key-vault documents.
 
+![](./rsc/custom_kms_on_mongodb.cover.png)
+
 The strongest version of this design uses MongoDB for the Key Vault and encrypted data plane, Node.js for policy and lifecycle control, and an external KMS, KMIP provider, or HSM-backed system for Customer Master Key custody. MongoDB recommends storing the CMK in a remote KMS because the CMK is the most sensitive key in the hierarchy, and compromise of the CMK compromises all protected data.
 
 This article describes an implementable architecture that stays within documented MongoDB capabilities, avoids unsupported combinations, and follows the security assumptions published for QE and CSFLE.

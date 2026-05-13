@@ -2,7 +2,7 @@
 
 A modern Fraud Detection System, or FDS, is designed to ingest operational events in real time, enrich them with context, evaluate risk through multiple detection techniques, and produce actionable outputs such as fraud scores, alerts, analyst review items, and operational risk views. Public MongoDB solution documentation describes this type of system as event-driven, real-time, and capable of combining rules, analytics, and AI/ML techniques in a single operational architecture.
 
-![](./fraud_detection_architecture.png)
+![](./rsc/fraud_detection_architecture.png)
 
 In the proposed architecture, MongoDB acts as the operational data store where core business events are stored, such as logins, money transfers, money receipts, merchant purchases, and other customer or device activities. From there, MongoDB Change Streams can detect changes in near real time and publish them to Kafka, where downstream fraud services can process the events asynchronously and at scale. MongoDB can also persist the scored and classified outcomes back into collections for operational use, alerting, dashboards, and case management.
 ## What a Fraud Detection System is trying to achieve
@@ -46,7 +46,7 @@ Once a transaction or event has been scored, the result should be stored back in
 A good FDS improves over time. Analysts review alerts, confirm fraud or non-fraud outcomes, and that feedback is sent back into the system to refine rules, profiles, and models. This feedback loop is one of the key mechanisms that allows modern fraud systems to adapt to changing attack patterns and reduce false positives over time.
 ## A basic end-to-end flow
 
-![](./fraud_detection_flow_diagram.png) 
+![](./rsc/fraud_detection_flow_diagram.png) 
 
 A simple flow for this architecture can be described as follows:
 
