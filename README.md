@@ -165,4 +165,8 @@ console.log(await coll.findOne({ ssn: "123-45-6789" }));
 - Tools
   - [Manage MongoDB Atlas Database Secrets in HashiCorp Vault](https://www.mongodb.com/company/blog/technical/manage-atlas-database-secrets-hashicorp-vault)
   - [Docker and MongoDB](https://www.mongodb.com/resources/products/compatibilities/docker)
-- [Cost Optimization with Optimal Document Size](https://www.mongodb.com/company/blog/technical/cost-optimization-with-optimal-document-size)
+- Related topics
+  - [Cost Optimization with Optimal Document Size](https://www.mongodb.com/company/blog/technical/cost-optimization-with-optimal-document-size)
+  - [Implementing a Custom KMS on MongoDB with Node.js](./docs/custom_kms_on_mongodb.md)
+  - [Fraud Detection System Architecture with MongoDB and Kafka](./docs/fraud_detection_system_architecture_mongodb_kafka.md)
+  - [QE REST Service – Queryable Encryption CRUD Demo](./docs/qe-rest-service.md)
