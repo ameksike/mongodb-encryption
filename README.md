@@ -55,7 +55,7 @@ Install MongoDB Crypt (Service or Shared Library)
   xattr -d com.apple.quarantine ./lib/mongo_crypt_v1.dylib  # remove quarantine on macOS; -d deletes the attribute
   export MONGODB_CRYPT_SHARED_LIB_PATH="$PWD/lib/mongo_crypt_v1.dylib" # absolute path required
   ```
-  ![](./docs/mdb.prd.ea.download.jpg)
+  ![](./docs/rsc/mdb.prd.ea.download.jpg)
 
 ```bash
 npm init -y                                          # -y accepts defaults to create package.json
